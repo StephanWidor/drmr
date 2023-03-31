@@ -87,6 +87,7 @@ struct kit_info {
 struct hp_info {
   char scan_only;
   char in_info;
+  char in_component_list;
   char in_instrument_list;
   char in_instrument;
   char in_layer;
@@ -105,6 +106,9 @@ startElement(void *userData, const char *name, const char **atts)
   struct hp_info* info = (struct hp_info*)userData;
   info->cur_off = 0;
   if (info->in_info) {
+    if(!info->in_component_list && !strcmp(name,"componentList")) {
+      info->in_component_list = 1;
+    }
     if (info->in_instrument) {
       if (!strcmp(name,"layer") && !info->scan_only) { 
 	info->in_layer = 1;
@@ -135,7 +139,7 @@ endElement(void *userData, const char *name)
   if (info->cur_off == MAX_CHAR_DATA) info->cur_off--;
   info->cur_buf[info->cur_off]='\0';
 
-  if (info->in_info && !info->in_instrument_list && !strcmp(name,"name"))
+  if (info->in_info && !info->in_component_list && !info->in_instrument_list && !strcmp(name,"name"))
     info->kit_info->name = strdup(info->cur_buf);
   if (info->scan_only && info->in_info && !info->in_instrument_list && !strcmp(name,"info"))
     info->kit_info->desc = strdup(info->cur_buf);
@@ -187,6 +191,7 @@ endElement(void *userData, const char *name)
     info->cur_instrument = NULL;
     info->in_instrument = 0;
   }
+  if (info->in_component_list && !strcmp(name,"componentList")) info->in_component_list = 0;
   if (info->in_instrument_list && !strcmp(name,"instrumentList")) info->in_instrument_list = 0;
   if (info->in_info && !strcmp(name,"drumkit_info")) info->in_info = 0;
 }
